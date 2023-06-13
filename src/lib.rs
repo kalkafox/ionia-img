@@ -59,17 +59,9 @@ pub mod handlers {
                 warp::reject::reject()
             })?;
 
-        let parts: Vec<Part> = form.try_collect().await.map_err(|e| {
-            eprintln!("form error: {}", e);
-            warp::reject::reject()
-        })?;
+        let mut parts = form.into_stream();
 
-        if parts.len() > 1 {
-            eprintln!("too many fields");
-            return Err(warp::reject::reject());
-        }
-
-        for p in parts {
+        while let Ok(p) = parts.next().await.unwrap() {
             match p.name() {
                 "data" => {
                     let mime_type = p.content_type().map(|ct| ct.to_string());
@@ -131,7 +123,7 @@ pub mod handlers {
     }
 
     pub async fn download(id: String) -> Result<impl warp::Reply, warp::Rejection> {
-        if id.contains(".") {
+        if id.contains('.') {
             return Err(warp::reject::not_found());
         }
 
@@ -140,13 +132,14 @@ pub mod handlers {
 
         mongodb_client_options.app_name = Some("rust-mongodb".to_string());
         let mongodb_client = Client::with_options(mongodb_client_options).unwrap();
-        let mongodb_database = mongodb_client.database("kalkafox");
+        let mongodb_database = mongodb_client.database("ionia-pw");
 
         let collection = mongodb_database.collection::<Post>("posts");
 
         let document = collection.find_one(doc! { "id": id }, None).await.unwrap();
 
         if document.is_none() {
+            eprintln!("document not found");
             return Err(warp::reject::not_found());
         }
 
