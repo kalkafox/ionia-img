@@ -1,7 +1,6 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
-// ALso bson::Document
 pub struct Post {
     pub id: String,
     pub bucket_id: mongodb::bson::oid::ObjectId,
@@ -24,8 +23,6 @@ pub mod handlers {
     use futures_util::{StreamExt, TryStreamExt};
     use mongodb::{bson::doc, options::ClientOptions, Client};
     use mongodb_gridfs::{options::GridFSBucketOptions, GridFSBucket};
-    use rand::distributions::{Alphanumeric, DistString};
-    use warp::multipart::Part;
 
     pub async fn upload(
         form: warp::multipart::FormData,
@@ -73,6 +70,15 @@ pub mod handlers {
 
                     let mime_type = mime_type.unwrap();
 
+                    let filename = p.filename().map(|fnm| fnm.to_string());
+
+                    if filename.is_none() {
+                        eprintln!("filename error");
+                        warp::reject::reject();
+                    }
+
+                    let filename = filename.unwrap();
+
                     let value = p
                         .stream()
                         .try_fold(Vec::new(), |mut vec, data| {
@@ -85,19 +91,19 @@ pub mod handlers {
                             warp::reject::reject()
                         })?;
 
-                    let rand_string = Alphanumeric.sample_string(&mut rand::thread_rng(), 16);
+                    //let rand_string = Alphanumeric.sample_string(&mut rand::thread_rng(), 16);
 
                     let mut bucket = GridFSBucket::new(
                         mongodb_database.clone(),
                         Some(GridFSBucketOptions::default()),
                     );
                     let id = bucket
-                        .upload_from_stream(rand_string.as_str(), value.as_slice(), None)
+                        .upload_from_stream(&filename, value.as_slice(), None)
                         .await
                         .unwrap();
 
                     let post = Post {
-                        id: rand_string,
+                        id: filename,
                         bucket_id: id,
                         mime_type,
                     };
@@ -123,10 +129,6 @@ pub mod handlers {
     }
 
     pub async fn download(id: String) -> Result<impl warp::Reply, warp::Rejection> {
-        if id.contains('.') {
-            return Err(warp::reject::not_found());
-        }
-
         let connection_env = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
         let mut mongodb_client_options = ClientOptions::parse(connection_env).await.unwrap();
 

@@ -47,7 +47,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             ))
         });
 
-    let not_found_route = warp::any().and_then(|| async move {
+    // missed opportunity to name this rooute, but it would be too ridiculous
+    let root_route = warp::path::end().and_then(|| async move {
         let web_path =
             std::env::var("ASSETS_PATH").unwrap_or_else(|_| "/frontend/dist".to_string());
         let file = tokio::fs::read_to_string(format!("{}/index.html", web_path))
@@ -59,7 +60,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let routes = upload_route
         .or(download_route)
         .or(asset_route)
-        .or(not_found_route);
+        .or(root_route);
 
     let app = warp::serve(routes).run(([0, 0, 0, 0], port));
 
