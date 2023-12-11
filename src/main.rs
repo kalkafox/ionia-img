@@ -21,7 +21,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let upload_route = warp::path!("upload")
         .and(warp::post()) // Only accept POST requests
-        .and(warp::multipart::form().max_length(12_000_000)) // 12MB
+        .and(warp::multipart::form().max_length(200_000_000)) // 200MB
         .and(warp::header::<String>("x-api-key"))
         .and_then(handlers::upload);
 
