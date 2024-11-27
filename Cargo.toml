@@ -6,17 +6,17 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-warp = "0.3.5"
-tokio = { version = "1.28.2", features = ["full"] }
-mongodb = "2.5.0"
-mongodb-gridfs = "0.2.5"
-serde = { version = "1.0.158", features = ["derive"] }
-serde_json = "1.0.94"
-futures-util = "0.3.27"
-mime_guess = "2.0.4"
+warp = "0.3.7"
+tokio = { version = "1.41.1", features = ["full"] }
+mongodb = "3.1.0"
+mongodb-gridfs = "0.2.7"
+serde = { version = "1.0.215", features = ["derive"] }
+serde_json = "1.0.133"
+futures-util = "0.3.31"
+mime_guess = "2.0.5"
 rand = "0.8.5"
-bytes = "1.4.0"
-ctrlc = "3.4.0"
+bytes = "1.8.0"
+ctrlc = "3.4.5"
 
 # Optimizations (making the binary as small as possible)
 [profile.release]
